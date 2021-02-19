@@ -38,6 +38,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('hello/', views.HelloView.as_view(), name='hello'),
     path('test/', views.TestView.as_view(), name='test'),
+    path('api/unsubscribe/', views.UnsubscribeView.as_view(), name='unsubscribe'),
     path('api/logout/', views.LogoutView.as_view(), name='logout'),
     path('api/register/', views.RegisterView.as_view(), name='register'),
     path('api/profile/', views.GetUserView.as_view(), name='profile'),

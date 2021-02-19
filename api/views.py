@@ -96,7 +96,7 @@ class SendResetPasswordEmailView(APIView):
 
             # send_mail(
             #     'Password Reset',
-            #     'Heeeeeeey fuck you im a password reset!',
+            #     'Heeeeeeey im a password reset!',
             #     'patrickflorian2@gmail.com',
             #     ['patrickflorian2@gmail.com'],
             #     fail_silently=False,
@@ -232,13 +232,19 @@ class SubmitContactFormView(APIView):
             content = {'message': 'Contact form ok!', 'success': True}
             return Response(content)
 
-@permission_classes((AllowAny,))
+@permission_classes((permissions.AllowAny,))
 class SubscribeView(APIView):
     def post(self, request):
 
         if Subscribers.objects.filter(email=request.data.get("email")).exists():
 
             content = {'message': 'You are already subscribed', 'success': False}
+            subject, from_email, to = 'Click the link below to unsubscribe', 'donotreply@patrickflorian.com', request.data.get("email")
+            html_content = render_to_string('email/unsubscribe.html', {'email': request.data.get("email") })
+            text_content = strip_tags(html_content)
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
             return Response(content)
 
         else:
@@ -250,6 +256,21 @@ class SubscribeView(APIView):
             subscribeModel.save()
             content = {'message': 'Subscribed ok!', 'success': True}
             return Response(content)
+
+@permission_classes((permissions.AllowAny,))
+class UnsubscribeView(APIView):
+
+    def post(self, request):
+        success = True
+        email = request.data.get("email")
+        subscriber = Subscribers.objects.filter(email=email)
+        # This is prevented throgh the frontend but if the user goes back to that link this prevents false positive model deletion on the UI side
+        if not subscriber:
+            success = False
+        else:
+            subscriber.delete()
+        content = {'message': 'Unsubscribed', 'email' : email, 'success': success }
+        return Response(content)
 
 # Seen at http://127.0.0.1:8000/users/
 class UserViewSet(viewsets.ModelViewSet):
